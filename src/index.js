@@ -4,6 +4,9 @@ import { config } from "dotenv";
 import { promises as fsPromises, unlink } from "fs";
 import pdf from "pdf-parse";
 import { GoogleGenAI } from "@google/genai";
+import morgan from "morgan";
+import cors from "cors";
+
 
 config();
 
@@ -23,6 +26,8 @@ const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 const app = express();
 app.use(json());
 app.use(urlencoded({ extended: true }));
+app.use(cors());
+app.use(morgan("tiny"))
 
 app.post("/analyze", upload.single("resume"), async (req, res) => {
   if (!req.file) {
@@ -77,7 +82,7 @@ app.post("/analyze", upload.single("resume"), async (req, res) => {
     return res.json({ analysis: response, success: true });
   } catch (error) {
     console.error("Error processing file:", error);
-    return res.status(500).send("Error processing file.");
+    return res.status(500).json({error:"Error processing file.", success: false});
   } finally {
     try {
       await fsPromises.unlink(filePath);
